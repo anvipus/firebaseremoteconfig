@@ -1,66 +1,67 @@
 package com.example.asus.firebasedummy
 
-import android.net.Uri
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-
-
-
-import com.google.firebase.dynamiclinks.DynamicLink
-import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
-import com.google.firebase.dynamiclinks.ShortDynamicLink
+import android.view.View
+import android.widget.Toast
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import java.util.concurrent.TimeUnit
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-    private var editText: EditText? = null
-    private var button: Button? = null
-    private var textView: TextView? = null
+
+    private lateinit var remoteConfig: FirebaseRemoteConfig
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        editText = findViewById(R.id.editText)
-        editText!!.setText("https://www.kaskus.co.id/")
-        button = findViewById(R.id.button)
-        textView = findViewById(R.id.textView)
-        button!!.setOnClickListener { buildReferral() }
-
+        setupRemoteConfig()
+        displayButton()
 
     }
 
-    fun buildReferral() {
-        val dynamicLink = FirebaseDynamicLinks.getInstance().createDynamicLink()
-                .setLink(Uri.parse(editText!!.text.toString()))
-                .setDynamicLinkDomain("firebasedummy.page.link")
-                //.setDomainUriPrefix("firebasedummy.page.link")
-                .setAndroidParameters(DynamicLink.AndroidParameters.Builder().build())
-                .setGoogleAnalyticsParameters(
-                        DynamicLink.GoogleAnalyticsParameters.Builder()
-                                .setSource("referral")
-                                .setContent("content")
-                                .setMedium("Android")
-                                .build())
-                .buildDynamicLink()
-        buildShortUrl(dynamicLink)
+    private fun setupRemoteConfig() {
+        remoteConfig = FirebaseRemoteConfig.getInstance()
     }
 
-    fun buildShortUrl(dynamicLink: DynamicLink) {
-        val shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
-                .setLink(Uri.parse(editText!!.text.toString()))
-                .setDynamicLinkDomain("firebasedummy.page.link")
-                .buildShortDynamicLink(ShortDynamicLink.Suffix.SHORT)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Short link created
-                        val shortLink = task.result!!.shortLink
-                        val flowchartLink = task.result!!.previewLink
+    private fun displayButton() {
+        if (remoteConfig.getBoolean(SHOW_BUTTON)) {
+            button.visibility = View.VISIBLE
+            //button.text = remoteConfig.getString(BUTTON1_LABEL)
+            button.text = "test"
+//            button.setOnClickListener {
+//                val intent: Intent = try {
+//                    Intent(this,
+//                            Class.forName(remoteConfig.getString(ACTION_BUTTON1)))
+//                } catch (e: ClassNotFoundException) {
+//                    Intent(this, CatActivity::class.java)
+//                }
+//                startActivity(intent)
+//            }
+        } else {
+            button.visibility = View.GONE
+        }
+    }
 
-                        textView!!.text = shortLink.toString()
+    private fun setupRemoteConfig2() {
+        remoteConfig = FirebaseRemoteConfig.getInstance()
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build()
+        remoteConfig.setConfigSettings(configSettings)
+        remoteConfig.setDefaults(R.xml.default_config)
+
+        remoteConfig.fetch(0)
+                .addOnCompleteListener(this) {
+                    if (it.isSuccessful) {
+                        Toast.makeText(this, "Fetch Succeeded", Toast.LENGTH_SHORT).show()
+                        remoteConfig.activateFetched()
                     } else {
-                        // Error
-                        // ...
+                        Toast.makeText(this, "Fetch Failed", Toast.LENGTH_SHORT).show()
                     }
+                    displayButton()
                 }
     }
 }
