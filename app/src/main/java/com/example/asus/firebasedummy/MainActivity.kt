@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setupRemoteConfig()
+        setupRemoteConfig2()
         displayButton()
 
     }
@@ -29,8 +29,8 @@ class MainActivity : AppCompatActivity() {
     private fun displayButton() {
         if (remoteConfig.getBoolean(SHOW_BUTTON)) {
             button.visibility = View.VISIBLE
-            //button.text = remoteConfig.getString(BUTTON1_LABEL)
-            button.text = "test"
+            button.text = remoteConfig.getString(BUTTON1_LABEL)
+//            button.text = "test"
 //            button.setOnClickListener {
 //                val intent: Intent = try {
 //                    Intent(this,
